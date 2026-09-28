@@ -38,19 +38,27 @@ The robot was built and tuned on real hardware. It is not a simulation.
 ## Architecture
 
 ```mermaid
-flowchart LR
-    CAM[USB camera<br/>640x480 @ 60 FPS] --> VT
-    subgraph VT[Vision thread]
-        HSV[HSV threshold<br/>red ball, yellow center] --> MORPH[Open / close] --> CNT[Largest contour<br/>min enclosing circle]
+flowchart TB
+    CAM["Overhead USB camera<br/>640×480 @ 60 FPS"]
+    subgraph V["Vision thread"]
+        DET["HSV mask → open/close → largest contour<br/>ball position + plate center (pixels)"]
     end
-    CNT -->|ball px, center px| CTRL
-    subgraph ASYNC[asyncio event loop]
-        CTRL[PD controller<br/>deadband + EMA] -->|tilt θ, direction φ| IK[3-RRS inverse kinematics]
-        IK -->|θ1 θ2 θ3| SAFE[Safety clamp]
-        SAFE --> MOT[Motor streaming task]
+    subgraph C["asyncio control loop"]
+        PD["PD controller<br/>deadband · EMA smoothing"]
+        IK["3-RRS inverse kinematics<br/>tilt θ, direction φ → motor angles"]
+        SAFE["Safety clamp<br/>±30° per motor · spread ≤ 60°"]
+        MOT["Motor streaming task"]
     end
-    MOT -->|set_position x3| MOTEUS[Moteus controllers<br/>FDCAN-USB]
-    CFG[pid_config.txt<br/>hot-reloaded] -.-> CTRL
+    CFG["pid_config.txt<br/>hot-reloaded gains"]
+    HW["3 × Moteus brushless controllers<br/>FDCAN-USB"]
+
+    CAM --> DET
+    DET -->|pixel error| PD
+    CFG -.-> PD
+    PD -->|θ, φ| IK
+    IK -->|θ1, θ2, θ3| SAFE
+    SAFE --> MOT
+    MOT -->|set_position ×3| HW
 ```
 
 Perception runs on its own thread, so frame capture never blocks control. Control and motor streaming run as two concurrent `asyncio` tasks. The controller updates the target angles, and a separate task streams them continuously to all three motors with `asyncio.gather`.
