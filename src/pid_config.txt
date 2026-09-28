@@ -1,0 +1,58 @@
+KP = 0.005*2*1.75  #1.5
+KD = 0.00555*5*2*2*2*2*2.5        #2.5
+ALPHA = 0.18            
+BETA = 0.3
+MUL = 1.2
+MAG = 130     
+
+
+#KP = 0.005*2*1.3   
+#KD = 0.00555*5*2 *2*2*2*2.5
+#ALPHA = 0.3               #0.35
+#BETA = 0.3
+#MUL = 1.2
+#MAG = 130
+
+
+
+# ---------------- PID TUNING GUIDE ----------------
+# Use this to decide whether to increase or decrease KP, KD, alpha, or beta.
+# KP (Position Gain)
+# - Increase KP if:
+#     • Ball moves slowly toward edge
+#     • Reverse tilt is too weak
+#     • Ball drifts in circles slowly
+# - Decrease KP if:
+#     • Plate shakes too much
+#     • Ball oscillates around center
+# KD (Damping / Braking Gain)
+# - Increase KD if:
+#     • Ball overshoots center
+#     • Ball starts circling after a few seconds
+#     • Reverse tilt fails for fast ball
+# - Decrease KD if:
+#     • Motors jitter when ball is still
+#     • Plate vibrates from noise
+#
+# alpha (Smoothing)
+# - Increase alpha if:
+#     • Plate is jittery or shaky
+#     • KD adds noise
+# - Decrease alpha if:
+#     • Reaction is too slow / delayed
+#     • Ball escapes because tilt comes late
+#
+# beta (Tilt Curve Responsiveness)
+# - Increase beta if:
+#     • Tilt grows too slowly
+#     • Fast-moving ball doesn’t get strong enough push
+# - Decrease beta if:
+#     • Tilt becomes too strong too quickly
+#     • Plate jumps to large tilt for small errors
+#
+# Quick Summary:
+# - Ball slow → raise KP
+# - Ball overshoots → raise KD
+# - Plate delayed → lower alpha
+# - Tilt too weak when fast → raise beta
+# ---------------------------------------------------
