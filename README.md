@@ -37,29 +37,11 @@ The robot was built and tuned on real hardware. It is not a simulation.
 
 ## Architecture
 
-```mermaid
-flowchart TB
-    CAM["Overhead USB camera<br/>640×480 @ 60 FPS"]
-    subgraph V["Vision thread"]
-        DET["HSV mask → open/close → largest contour<br/>ball position + plate center (pixels)"]
-    end
-    subgraph C["asyncio control loop"]
-        PD["PD controller<br/>deadband · EMA smoothing"]
-        IK["3-RRS inverse kinematics<br/>tilt θ, direction φ → motor angles"]
-        SAFE["Safety clamp<br/>±30° per motor · spread ≤ 60°"]
-        MOT["Motor streaming task"]
-    end
-    CFG["pid_config.txt<br/>hot-reloaded gains"]
-    HW["3 × Moteus brushless controllers<br/>FDCAN-USB"]
+<p align="center">
+  <img src="docs/architecture.png" alt="Ball-balancing robot architecture: camera, vision thread, PD control, inverse kinematics, safety clamp, Moteus motors" width="420">
+</p>
 
-    CAM --> DET
-    DET -->|pixel error| PD
-    CFG -.-> PD
-    PD -->|θ, φ| IK
-    IK -->|θ1, θ2, θ3| SAFE
-    SAFE --> MOT
-    MOT -->|set_position ×3| HW
-```
+<sub>Diagram source: [`docs/architecture.mmd`](docs/architecture.mmd)</sub>
 
 Perception runs on its own thread, so frame capture never blocks control. Control and motor streaming run as two concurrent `asyncio` tasks. The controller updates the target angles, and a separate task streams them continuously to all three motors with `asyncio.gather`.
 
